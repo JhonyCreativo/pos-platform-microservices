@@ -1,6 +1,6 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../security/jwt.guard';
-import { UsersProxy } from '../proxy/users.proxy';
+import { JwtAuthGuard } from '../../security/jwt.guard';
+import { UsersProxy } from '../users/users.proxy';
 
 @Controller('me')
 export class MeController {

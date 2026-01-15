@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuthProxy } from '../proxy/auth.proxy';
+import { AuthProxy } from './auth.proxy';
 
 @Controller('auth')
 export class AuthController {

@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -15,6 +16,11 @@ async function bootstrap() {
     }
   );
   app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }));
   // documentar apis
   const config = new DocumentBuilder()
     .setTitle('POS API Gateway - Auth')

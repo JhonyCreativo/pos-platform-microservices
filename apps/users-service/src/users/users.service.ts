@@ -57,7 +57,7 @@ export class UsersService {
     async findCredentialsByEmail(email: string) {
         return this.prisma.user.findUnique({
             where: { email },
-            select: { id: true, email: true, password: true, active: true },
+            select: { id: true, email: true, password: true, active: true ,name: true, phone: true},
         });
     }
 }

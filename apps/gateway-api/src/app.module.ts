@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { PassportModule } from '@nestjs/passport';
-import { AuthController } from './controllers/auth.controller';
-import { MeController } from './controllers/me.controller';
-import { AuthProxy } from './proxy/auth.proxy';
-import { UsersProxy } from './proxy/users.proxy';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { JwtStrategy } from './security/jwt.strategy';
+
+import { AuthModule } from './modules/auth/auth.module';
+import { MeModule } from './modules/me/me.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -18,8 +19,11 @@ import { JwtStrategy } from './security/jwt.strategy';
       maxRedirects: 5,
     }),
     PassportModule,
+    AuthModule,
+    MeModule,
+    UsersModule,
   ],
-  controllers: [AppController, AuthController, MeController],
-  providers: [AppService, AuthProxy, UsersProxy, JwtStrategy],
+  controllers: [AppController],
+  providers: [AppService, JwtStrategy],
 })
 export class AppModule {}
