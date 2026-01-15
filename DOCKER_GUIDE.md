@@ -81,3 +81,9 @@ docker compose --profile infra --profile backend --profile web up -d --build
 ```bash
 docker compose --profile infra --profile backend up -d --build
 ```
+
+# Ver la base de datos en prisma
+# Iniciar studio pero dentro de users-service
+```bash
+pnpm dlx prisma studio
+```
