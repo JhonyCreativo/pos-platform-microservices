@@ -16,17 +16,13 @@ export class UsersController {
 
     @Get()
     findByEmail(@Query('email') email: string) {
-        return this.users.findByEmail(email);
+        console.log('findByEmail called with:', email); 
+        return this.users.findCredentialsByEmail(email);
     }
 
     @Get(':id/permissions')
     permissions(@Param('id') id: string) {
         return this.users.getPermissions(id);
-    }
-
-    @Get()
-    findByEmailInternal(@Query('email') email: string) {
-        return this.users.findByEmailInternal(email);
     }
 
     @Get('credentials')

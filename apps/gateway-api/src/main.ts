@@ -17,7 +17,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   // documentar apis
   const config = new DocumentBuilder()
-    .setTitle('POS API Gateway')
+    .setTitle('POS API Gateway - Auth')
     .setDescription('Contrato público del API Gateway del POS')
     .setVersion('1.0.0')
     .addCookieAuth('access_token', {

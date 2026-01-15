@@ -7,7 +7,9 @@ export class AuthController {
   constructor(private auth: AuthProxy) {}
 
   @Post('login')
-  async login(@Body() body: any, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() body: any, 
+    @Res({ passthrough: true }) res: Response) {
     const data = await this.auth.login(body); // { accessToken, refreshToken }
 
     // Guardamos access token en cookie HttpOnly
@@ -31,6 +33,7 @@ export class AuthController {
     // No devolvemos tokens al frontend (más seguro)
     return { ok: true };
   }
+
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token', { path: '/' });

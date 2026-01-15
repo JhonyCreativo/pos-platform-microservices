@@ -1,8 +1,27 @@
+version: "3.9"
+
+name: pos
+
+x-common-env: &common_env
+  TZ: America/Lima
+
+x-common-service: &common_service
+  restart: unless-stopped
+  init: true
+  networks:
+    - pos-net
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   postgres:
     image: postgres:16
     container_name: pos-postgres
     environment:
+      <<: *common_env
       POSTGRES_USER: pos
       POSTGRES_PASSWORD: pos
       POSTGRES_DB: pos
@@ -10,14 +29,131 @@ services:
       - "5432:5432"
     volumes:
       - pos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pos -d pos"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    <<: *common_service
+    profiles: ["infra"]
 
   redis:
     image: redis:7
     container_name: pos-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    environment:
+      <<: *common_env
     ports:
       - "6379:6379"
     volumes:
       - pos_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    <<: *common_service
+    profiles: ["infra"]
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: ./apps/gateway-api/Dockerfile
+      # target: prod   # si usas multi-stage, descomenta y usa target
+    container_name: pos-gateway-api
+    user: root # Development mode needs root to write to mounted volumes
+    env_file:
+      - ./apps/gateway-api/.env
+    environment:
+      <<: *common_env
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./apps/gateway-api:/app/apps/gateway-api
+      - /app/apps/gateway-api/node_modules
+    command: ["npm", "run", "dev", "--prefix", "apps/gateway-api"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      users-service:
+        condition: service_started
+    <<: *common_service
+    profiles: ["backend"]
+    # Límites suaves (ajusta si deseas)
+    mem_limit: 1024m
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./apps/auth-service/Dockerfile
+      # target: prod
+    container_name: pos-auth-service
+    user: root
+    env_file:
+      - ./apps/auth-service/.env
+    environment:
+      <<: *common_env
+      USERS_SERVICE_URL: http://users-service:3001
+    volumes:
+      - ./apps/auth-service:/app/apps/auth-service
+      - /app/apps/auth-service/node_modules
+    command: ["npm", "run", "dev", "--prefix", "apps/auth-service"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    <<: *common_service
+    profiles: ["backend"]
+    mem_limit: 768m
+
+  users-service:
+    build:
+      context: .
+      dockerfile: ./apps/users-service/Dockerfile
+      # target: prod
+    container_name: pos-users-service
+    user: root
+    env_file:
+      - ./apps/users-service/.env
+    environment:
+      <<: *common_env
+      DATABASE_URL: postgresql://pos:pos@postgres:5432/pos?schema=users
+    volumes:
+      - ./apps/users-service:/app/apps/users-service
+      - /app/apps/users-service/node_modules
+    command: ["npm", "run", "dev", "--prefix", "apps/users-service"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    <<: *common_service
+    profiles: ["backend"]
+    mem_limit: 768m
+
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      # target: prod
+    container_name: pos-web
+    env_file:
+      - ./apps/web/.env
+    environment:
+      <<: *common_env
+    ports:
+      - "3000:3000"
+    depends_on:
+      gateway-api:
+        condition: service_started
+    <<: *common_service
+    profiles: ["web"]
+    mem_limit: 1536m
+
+networks:
+  pos-net:
+    driver: bridge
 
 volumes:
   pos_pgdata:
